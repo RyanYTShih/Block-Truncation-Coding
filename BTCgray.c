@@ -5,7 +5,7 @@
 #include <time.h>
 
 #define FILENAME_LENGTH 30
-#define MAX_PIXEL_VALUE 256
+#define MAX_PIXEL_VALUE 255
 #define BLOCK_WIDTH 4
 #define BLOCK_NUM (BLOCK_WIDTH * BLOCK_WIDTH)
 
@@ -25,11 +25,11 @@ static float MSE = 0.0;
 static float PSNR = 0.0;
 
 void memAlloc();
-int readImage(int **image);
-void calAvg(int **image);
-void calBitmap(float **image);
+int readImage(int**);
+void calAvg(int**);
+void calBitmap(float**);
 void decode();
-int outputImage(int **image);
+int outputImage(int**);
 
 
 int main(int argc, char **argv)
@@ -80,28 +80,28 @@ void memAlloc()
 {
     int i, j;
     
-    filename = (char*) malloc(sizeof(char) * FILENAME_LENGTH);
-    filename_out = (char*) malloc(sizeof(char) * (FILENAME_LENGTH + 4));
+    filename = malloc(sizeof(char) * FILENAME_LENGTH);
+    filename_out = malloc(sizeof(char) * (FILENAME_LENGTH + 4));
     
 
-    OriginImage = (int**) malloc(sizeof(int*) * width);
-    image_out = (int**) malloc(sizeof(int*) * width);
-    bitmap = (int**) malloc(sizeof(int*) * width);
+    OriginImage = malloc(sizeof(int*) * width);
+    image_out = malloc(sizeof(int*) * width);
+    bitmap = malloc(sizeof(int*) * width);
     for (i = 0; i < width; i++)
     {
-        OriginImage[i] = (int*) malloc(sizeof(int) * width);
-        image_out[i] = (int*) malloc(sizeof(int) * width);
-        bitmap[i] = (int*) malloc(sizeof(int) * width);
+        OriginImage[i] = malloc(sizeof(int) * width);
+        image_out[i] = malloc(sizeof(int) * width);
+        bitmap[i] = malloc(sizeof(int) * width);
     }
 
-    imageAvg = (float**) malloc(sizeof(float*) * (width / BLOCK_WIDTH));
-    avgHigh = (int**) malloc(sizeof(int*) * (width / BLOCK_WIDTH));
-    avgLow = (int**) malloc(sizeof(int*) * (width / BLOCK_WIDTH));
+    imageAvg = malloc(sizeof(float*) * (width / BLOCK_WIDTH));
+    avgHigh = malloc(sizeof(int*) * (width / BLOCK_WIDTH));
+    avgLow = malloc(sizeof(int*) * (width / BLOCK_WIDTH));
     for(i = 0; i < width / BLOCK_WIDTH; i++)
     {
-        imageAvg[i] = (float*) malloc(sizeof(float) * (width / BLOCK_WIDTH));
-        avgHigh[i] = (int*) malloc(sizeof(int) * (width / BLOCK_WIDTH));
-        avgLow[i] = (int*) malloc(sizeof(int) * (width / BLOCK_WIDTH));
+        imageAvg[i] = malloc(sizeof(float) * (width / BLOCK_WIDTH));
+        avgHigh[i] = malloc(sizeof(int) * (width / BLOCK_WIDTH));
+        avgLow[i] = malloc(sizeof(int) * (width / BLOCK_WIDTH));
     }
 }
 
@@ -157,13 +157,13 @@ void calBitmap(float **imageAvg)
     {
         for(avgY = 0; avgY < width / BLOCK_WIDTH; avgY++)
         {
-            int countHigher = 0;
+            int countHigher = 0, count = 0;
             float sigma = 0;
             for(x = avgX * BLOCK_WIDTH; x < avgX * BLOCK_WIDTH + BLOCK_WIDTH; x++)
             {
                 for(y = avgY * BLOCK_WIDTH; y < avgY * BLOCK_WIDTH + BLOCK_WIDTH; y++)
                 {
-                    if(OriginImage[x][y] > imageAvg[avgX][avgY])
+                    if(OriginImage[x][y] >= imageAvg[avgX][avgY])
                     {
                         bitmap[x][y] = 1;
                         countHigher++;
@@ -176,7 +176,7 @@ void calBitmap(float **imageAvg)
                 }
             }
             sigma = sqrt(sigma / BLOCK_NUM);
-            if(countHigher == 0)
+            if(countHigher == 0 || countHigher == BLOCK_NUM)
             {
                 avgHigh[avgX][avgY] = avgLow[avgX][avgY] = imageAvg[avgX][avgY];
             }
